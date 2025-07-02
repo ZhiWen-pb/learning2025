@@ -1,0 +1,444 @@
+---
+title: "Mathematical practice final exam 2025"
+date: '2025-07-02'
+documentclass: ctexart
+output:
+ pdf_document:
+    latex_engine: xelatex
+ html_document:
+    df_print: paged
+---
+
+```{r message = F, echo = F}
+# 设置全局代码块选项
+knitr::opts_chunk$set(
+  echo = TRUE,          # 显示代码
+  warning = FALSE,      # 不显示警告信息
+  message = FALSE,      # 不显示消息
+  fig.align = "center"  # 图片居中显示
+)
+library(tidyverse)
+# install.packages("Ecdat")
+library(Ecdat)
+library(knitr)  # 用于表格输出
+```
+
+## 1. 
+Find the inverse of the following matrix and verify it using the `all.equal()` function.
+$$
+\left(\begin{array}{cccc}
+9 & 4 & 12 & 2 \\
+5 & 0 & 7 & 9 \\
+2 & 6 & 8 & 0 \\
+9 & 2 & 9 & 11
+\end{array}\right) 
+$$
+```{r}
+# 创建矩阵A
+# byrow = FALSE 表示按列填充数据
+A <- matrix(c(9, 5, 2, 9, 4, 0, 6, 2, 12, 7, 8, 9, 2, 9, 0, 11),
+            nrow = 4, byrow = FALSE)
+
+# 使用 solve() 函数计算矩阵A的逆矩阵
+A_inv <- solve(A)
+
+# 打印原始矩阵和其逆矩阵
+print("Matrix A:")
+kable(A)
+print("Inverse of Matrix A:")
+kable(A_inv)
+
+# 验证：A乘以其逆矩阵应该得到一个单位矩阵
+# 创建一个4x4的单位矩阵用于比较
+I <- diag(4)
+
+# 使用 all.equal() 检查 A %*% A_inv 是否约等于单位矩阵 I
+# 这个函数可以处理浮点数计算带来的微小误差
+verification <- all.equal(A %*% A_inv, I)
+
+# 打印验证结果
+print(paste("Verification result (TRUE means success):", verification))
+```
+
+
+## 2. 
+Execute the following lines which create two vectors of random integers which are chosen with replacement from the integers $0, 1, \dots , 999$. Both vectors have length 250. 
+
+```{r}
+xVec <- sample(0:999, 250, replace=T)
+yVec <- sample(0:999, 250, replace=T)
+n <- length(xVec)
+```
+
+(a) Create the vector $(y_2 - x_1, \cdots, y_n - x_{n-1}).$
+```{r}
+# yVec从第二个元素取到最后一个
+# xVec从第一个元素取到倒数第二个
+result_a <- yVec[2:n] - xVec[1:(n-1)]
+print("First 6 elements of the resulting vector:")
+head(result_a)
+```
+
+
+(b) Pick out the values in yVec which are $> 600$.
+
+```{r}
+# 使用逻辑索引来筛选yVec中大于600的元素
+result_b <- yVec[yVec > 600]
+print("Values in yVec > 600 (first 6):")
+head(result_b)
+```
+
+
+(c) What are the index positions in yVec of the values which are $> 600$? 
+
+```{r}
+# which() 函数返回满足条件的元素的索引
+result_c <- which(yVec > 600)
+print("Index positions of values > 600 in yVec (first 6):")
+head(result_c)
+```
+
+
+(d) Sort the numbers in the vector xVec in the order of increasing values in yVec. 
+
+```{r}
+# order(yVec) 返回yVec按升序排列的原始索引
+# 然后用这个索引顺序来排列xVec
+result_d <- xVec[order(yVec)]
+print("xVec sorted by yVec (first 6):")
+head(result_d)
+```
+
+
+(e) Pick out the elements in yVec at index positions $1, 4, 7, 10, 13, \cdots$
+
+```{r}
+# seq() 生成一个从1开始，步长为3的序列
+indices <- seq(from = 1, to = n, by = 3)
+result_e <- yVec[indices]
+print("Elements from yVec at positions 1, 4, 7, ... (first 6):")
+head(result_e)
+```
+
+## 3.
+For this problem we'll use the (built-in) dataset state.x77.
+```{r}
+data(state)
+state.x77 <- as_tibble(state.x77, rownames  = 'State')
+
+state_data <- state.x77
+# 为了方便后续操作，将列名中的空格替换为下划线
+colnames(state_data) <- make.names(colnames(state_data))
+```
+
+a. Select all the states having an income less than 4300, and calculate the average income of these states.
+```{r}
+# 使用 filter() 筛选收入低于4300的州
+low_income_states <- state_data %>% filter(Income < 4300)
+
+# 使用 summarise() 计算平均收入
+avg_income <- low_income_states %>% summarise(AverageIncome = mean(Income))
+
+print("Average income for states with income < 4300:")
+kable(avg_income)
+```
+
+b.	Sort the data by income and select the state with the highest income.
+```{r}
+# arrange(desc(Income)) 按收入降序排列
+# slice(1) 选取第一行，即收入最高的州
+highest_income_state <- state_data %>% 
+  arrange(desc(Income)) %>% 
+  slice(1)
+
+print("State with the highest income:")
+kable(highest_income_state)
+```
+
+c.	Add a variable to the data frame which categorizes the size of population: $<= 4500$ is `S`, $> 4500$ is `L`.
+```{r}
+# 使用 mutate() 和 ifelse() 添加新列 Population.Size
+state_data <- state_data %>%
+  mutate(
+    Population.Size = ifelse(Population <= 4500, "S", "L")
+  )
+
+print("Data with new Population.Size column (first 6 rows):")
+kable(head(state_data))
+```
+
+d.	Find out the average income and illiteracy of the two groups of states, distinguishing by whether the states are small or large.
+```{r}
+# group_by() 按人口规模分组
+# summarise() 分别计算每组的平均收入和平均文盲率
+summary_by_size <- state_data %>%
+  group_by(Population.Size) %>%
+  summarise(
+    Average.Income = mean(Income),
+    Average.Illiteracy = mean(Illiteracy)
+  )
+
+print("Summary by population size:")
+kable(summary_by_size)
+```
+
+## 4. 
+a. Write a function to simulate `n` observations of $(X_1, X_2)$ which follow the uniform distribution over the square $[0, 1] \times [0, 1]$.
+```{r}
+# 定义函数，输入参数为n (观测值数量)
+simulate_points <- function(n) {
+  # 使用runif(n)生成n个[0,1]区间的随机数
+  tibble(
+    X1 = runif(n),
+    X2 = runif(n)
+  )
+}
+
+# 调用函数生成10个点作为示例
+example_points <- simulate_points(10)
+print("Example of 10 simulated points:")
+kable(example_points)
+```
+
+b. Write a function to calculate the proportion of the observations that the distance between $(X_1, X_2)$ and the nearest edge is less than 0.25, and the proportion of them with the distance to the nearest vertex less than 0.25.
+```{r}
+# 定义函数，输入为包含X1, X2坐标的数据框
+calculate_proportions <- function(points_df) {
+  n_obs <- nrow(points_df)
+  
+  # 计算每个点到最近边缘的距离
+  # pmin()返回每个位置上的最小值
+  dist_edge <- pmin(points_df$X1, 1 - points_df$X1, 
+                      points_df$X2, 1 - points_df$X2)
+  
+  # 计算每个点到最近顶点的距离
+  # 四个顶点为 (0,0), (1,0), (0,1), (1,1)
+  dist_v1 <- sqrt(points_df$X1^2 + points_df$X2^2)
+  dist_v2 <- sqrt((1 - points_df$X1)^2 + points_df$X2^2)
+  dist_v3 <- sqrt(points_df$X1^2 + (1 - points_df$X2)^2)
+  dist_v4 <- sqrt((1 - points_df$X1)^2 + (1 - points_df$X2)^2)
+  dist_vertex <- pmin(dist_v1, dist_v2, dist_v3, dist_v4)
+  
+  # 计算满足条件的比例
+  prop_edge <- sum(dist_edge < 0.25) / n_obs
+  prop_vertex <- sum(dist_vertex < 0.25) / n_obs
+  
+  # 返回一个列表包含两个比例
+  list(
+    prop_near_edge = prop_edge,
+    prop_near_vertex = prop_vertex
+  )
+}
+
+# 使用10000个模拟点进行计算
+many_points <- simulate_points(10000)
+proportions <- calculate_proportions(many_points)
+print(proportions)
+```
+
+## 5.
+
+To estimate $\pi$ with a Monte Carlo simulation, we draw the unit circle inside the unit square, the ratio of the area of the circle to the area of the square will be $\pi / 4$. Then shot $K$ arrows at the square, roughly $K * \pi / 4$ should have fallen inside the circle. So if now you shoot $N$ arrows at the square, and $M$ fall inside the circle, you have the following relationship $M = N * \pi / 4$. You can thus compute $\pi$ like so: $\pi = 4 * M / N$. The more arrows $N$ you throw at the square, the better approximation of $\pi$ you'll have.
+
+```{r}
+n <- 10000
+
+set.seed(1)
+points <- tibble("x" = runif(n), "y" = runif(n))
+```
+
+Now, to know if a point is inside the unit circle, we need to check whether $x^2 + y^2 < 1$. Let's add a new column to the points tibble, called `inside` equal to `1` if the point is inside the unit circle and `0` if not:
+
+```{r}
+points <- points |> 
+    mutate(inside = map2_dbl(.x = x, .y = y, ~ifelse(.x**2 + .y**2 < 1, 1, 0))) |> 
+    rowid_to_column("N")
+```
+
+a. Compute the estimation of $\pi$ at each row, by computing the cumulative sum of the 1's in the `inside` column and dividing that by the current value of `N` column:
+
+```{r}
+# cumsum(inside) 计算落在圆内的点的累积数量 M
+# pi_est = 4 * M / N
+pi_estimates <- points %>%
+  mutate(
+    M = cumsum(inside),
+    pi_est = 4 * M / N
+  )
+
+print("Pi estimates at each step (first 10):")
+kable(head(pi_estimates, 10))
+```
+
+b. Plot the estimates of $\pi$ against `N`.
+
+```{r}
+ggplot(pi_estimates, aes(x = N, y = pi_est)) +
+  geom_line(color = "blue", alpha = 0.7) +
+  # 添加一条水平红线表示pi的真实值
+  geom_hline(yintercept = pi, color = "red", linetype = "dashed") +
+  # 设置图表标题和坐标轴标签 (英文)
+  labs(
+    title = "Monte Carlo Estimation of Pi",
+    x = "Number of Throws (N)",
+    y = "Estimate of Pi"
+  ) +
+  theme_minimal()
+```
+
+## 6. 
+Mortality rates per 100,000 from male suicides for a number of age groups and a number of countries are given in the following data frame. 
+```{r}
+suicrates <- tibble(Country = c('Canada', 'Israel', 'Japan', 'Austria', 'France', 'Germany',
+'Hungary', 'Italy', 'Netherlands', 'Poland', 'Spain', 'Sweden', 'Switzerland', 'UK', 'USA'), 
+Age25.34 = c(22,  9, 22, 29, 16, 28, 48,  7,  8, 26,  4, 28, 22, 10, 20), 
+Age35.44 = c(27, 19, 19, 40, 25, 35, 65,  8, 11, 29,  7, 41, 34, 13, 22), 
+Age45.54 = c(31, 10, 21, 52, 36, 41, 84, 11, 18, 36, 10, 46, 41, 15, 28), 
+Age55.64 = c(34, 14, 31, 53, 47, 49, 81, 18, 20, 32, 16, 51, 50, 17, 33), 
+Age65.74 = c(24, 27, 49, 69, 56, 52, 107, 27, 28, 28, 22, 35, 51, 22, 37))
+```
+
+a. Transform `suicrates` into *long* form.
+```{r}
+# 使用 pivot_longer 将宽数据转换为长数据
+suicrates_long <- suicrates %>%
+  pivot_longer(
+    cols = -Country,          # 转换除Country外的所有列
+    names_to = "AgeGroup",    # 新的列名，存储原列名
+    values_to = "Rate"        # 新的列名，存储原单元格值
+  )
+
+print("Transformed data in long format (first 6 rows):")
+kable(head(suicrates_long))
+```
+
+b. Construct side-by-side box plots for the data from different age groups, and comment on what the graphic tells us about the data. 
+```{r}
+ggplot(suicrates_long, aes(x = AgeGroup, y = Rate, fill = AgeGroup)) +
+  geom_boxplot() +
+  # 设置图表标题和坐标轴标签 (英文)
+  labs(
+    title = "Male Suicide Rates by Age Group",
+    x = "Age Group",
+    y = "Mortality Rate per 100,000"
+  ) +
+  theme_minimal() +
+  # 旋转x轴标签以防重叠
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none") # 隐藏图例
+```
+**评论:** 从箱线图中可以看出，随着年龄的增长，男性自杀率的中位数和分布范围（即四分位距）整体上呈现上升趋势。
+`Age65-74`年龄组的自杀率最高，且有一个非常高的异常值，表明在某些国家该年龄段的自杀问题尤为严重。
+具体来说，该箱线图揭示了男性自杀率与年龄的显著关系。主要观察如下：
+整体趋势：随着年龄组的增长，自杀率的中位数呈现出明显的上升趋势，表明年龄较大的群体面临更高的自杀风险。
+数据离散度：年龄越大，箱体（即四分位距）也越宽，这说明不同国家在高年龄组的自杀率差异更大，数据变异性增加。
+关键异常值：Age65-74 年龄组不仅拥有最高的中位数，还包含一个极高的异常值，这说明在至少一个国家，该年龄段的自杀率远超其他国家，是一个需要特别关注的公共卫生问题。
+
+## 7. 
+Load the `LaborSupply` dataset from the `{Ecdat}` package and answer the following questions:
+
+```{r}
+#data(LaborSupply)
+LaborSupply <- read_csv("LaborSupply.csv")
+# create hour and wage variables
+labor <- LaborSupply |> 
+  mutate(hour = exp(lnhr), wage = exp(lnwg), .before = kids) |> 
+  dplyr::select(-lnhr, -lnwg)
+```
+
+a. Compute the average annual hours worked and their standard deviations by year.
+
+```{r}
+# 从提供的 "LaborSupply.csv" 文件加载数据
+LaborSupply <- read_csv("LaborSupply.csv")
+
+# 创建 hour 和 wage 变量
+labor <- LaborSupply %>% 
+  mutate(hour = exp(lnhr), wage = exp(lnwg), .before = kids) %>% 
+  dplyr::select(-lnhr, -lnwg)
+
+# 按年份分组，然后计算每年的平均工时和标准差
+summary_by_year <- labor %>%
+  group_by(year) %>%
+  summarise(
+    Average.Hours = mean(hour),
+    Std.Dev.Hours = sd(hour)
+  )
+
+print("Average annual hours worked by year:")
+kable(summary_by_year)
+```
+
+b. What age group worked the most hours in the year 1982?
+
+```{r}
+# 筛选1982年的数据，并使用cut()将年龄分组成段
+# 然后按年龄组计算平均工时，并排序找到最高值
+most_hours_group <- labor %>%
+  filter(year == 1982) %>%
+  mutate(
+    Age.Group = cut(age, breaks = c(20, 30, 40, 50, 60), 
+                    right = FALSE)
+  ) %>%
+  group_by(Age.Group) %>%
+  summarise(Average.Hours = mean(hour)) %>%
+  arrange(desc(Average.Hours))
+
+print("Average hours by age group in 1982:")
+kable(most_hours_group)
+print(paste("The age group with the most hours is:", 
+            most_hours_group$Age.Group[1]))
+```
+
+c. Create a variable, `n_years` that equals the number of years an individual stays in the panel. Is the panel balanced?
+
+```{r}
+# 按个体id分组，使用n()计算每个id出现的次数
+labor_with_nyears <- labor %>%
+  group_by(id) %>%
+  mutate(n_years = n()) %>%
+  ungroup()
+
+# 检查所有n_years是否都等于最大值
+# 如果是，则面板数据是平衡的
+is_balanced <- all(labor_with_nyears$n_years == max(labor_with_nyears$n_years))
+
+print(paste("Is the panel balanced?", is_balanced))
+print("Distribution of n_years:")
+kable(table(labor_with_nyears$n_years))
+```
+
+d. Which are the individuals that do not have any kids during the whole period? Create a variable, `no_kids`, that flags these individuals (1 = no kids, 0 = kids)
+
+```{r}
+# 按id分组，如果一个id的所有kids加起来等于0，则标记为1
+labor_with_nokids <- labor %>%
+  group_by(id) %>%
+  mutate(no_kids = ifelse(sum(kids) == 0, 1, 0)) %>%
+  ungroup()
+
+print("Individuals with no kids (first 6 rows):")
+kable(head(filter(labor_with_nokids, no_kids == 1)))
+```
+
+e. Using the `no_kids` variable from before compute the average wage, standard deviation and number of observations in each group for the year 1980 (no kids group vs kids group).
+
+```{r}
+# 筛选1980年的数据，按no_kids分组
+# 计算每组的平均工资、标准差和观测数(n())
+summary_1980 <- labor_with_nokids %>%
+  filter(year == 1980) %>%
+  group_by(no_kids) %>%
+  summarise(
+    Average.Wage = mean(wage),
+    Std.Dev.Wage = sd(wage),
+    Observations = n()
+  )
+
+print("Summary of wage in 1980 by kids status:")
+kable(summary_1980)
+```
+
+```{r}
+```

@@ -1,0 +1,38 @@
+library/
+local/
+cellar/
+lock/
+python/
+sandbox/
+staging/
+# History files
+.Rhistory
+.Rapp.history
+
+# Session Data files
+.RData
+
+# User-specific files
+.Ruserdata
+
+# RStudio files
+.Rproj.user/
+
+# VS Code files
+.vscode/
+settings.json
+
+# renv files - VERY IMPORTANT
+# This ignores the library but tracks the lockfile and activation scripts.
+renv/library/
+renv/staging/
+
+# Knitr and R Markdown cache files
+*_cache/
+/cache/
+*.utf8.md
+*.knit.md
+
+# General OS files
+.DS_Store
+Thumbs.db
